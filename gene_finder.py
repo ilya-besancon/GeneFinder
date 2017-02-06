@@ -72,9 +72,6 @@ def rest_of_ORF(dna):
     return(neworf)
 
 
-rest_of_ORF('ATGCCCTGA')
-
-
 def find_all_ORFs_oneframe(dna):
     # start = dna.find('ATG')
     # print(stop1)
@@ -85,10 +82,8 @@ def find_all_ORFs_oneframe(dna):
             stop1 = rest_of_ORF(dna[n:])
             oneframe.append(stop1)
             n = n + len(stop1[-1])
-            print(n)
         else:
             n = n + 3
-            print(n)
     return oneframe
 
 # shift + enter runs highlighted
@@ -103,70 +98,96 @@ def find_all_ORFs(dna):
         # returns: a list of non-nested ORFs
         b = find_all_ORFs_oneframe(dna[1:])
         c = find_all_ORFs_oneframe(dna[2:])
-        allORF.extend([a, b, c])
+        allORF.extend(a)
+        allORF.extend(b)
+        allORF.extend(c)
         return allORF
 
 
 def find_all_ORFs_both_strands(dna):
+    # returns list of all orfs
     blank_list = []
+    new_list = []
     reverse_dna = get_reverse_complement(dna)
     blank_list.extend(find_all_ORFs(dna))
     blank_list.extend(find_all_ORFs(reverse_dna))
-    return blank_list
+    for i in blank_list:
+        new_list += i
+    return new_list
 
 
 find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
-
 
 # stop here for week 1!!
 
 
 def longest_ORF(dna):
-    """ Finds the longest ORF on both strands of the specified DNA and returns it
-        as a string
-    >>> longest_ORF("ATGCGAATGTAGCATCAAA")
-    'ATGCTACATTCGCAT'
-    """
-    # TODO: implement this
-    pass
+    # returns string of longest reading frame
+    currentmax = ''
+    new_list = find_all_ORFs_both_strands(dna)
+    for i in range(len(new_list)):
+        if len(new_list[i]) > len(new_list[0]):
+            currentmax = new_list[i]
+    return currentmax
+
+
+longest_ORF("ATGCGAATGTAGCATCAAA")
 
 
 def longest_ORF_noncoding(dna, num_trials):
-    """ Computes the maximum length of the longest ORF over num_trials shuffles
-        of the specfied DNA sequence
+    # returns int length of longest reading frame
+    list_values = []
+    val = 0
+    for i in range(num_trials):
+        newdna = shuffle_string(dna)
+        longest = longest_ORF(newdna)
+        if len(longest) > val:
+            val = len(longest)
+            list_values.append(val)
+    return val
 
-        dna: a DNA sequence
-        num_trials: the number of random shuffles
-        returns: the maximum length longest ORF """
-    # TODO: implement this
-    pass
+
+longest_ORF_noncoding("ATGCGAATGTAGCATCAAA", 30)
 
 
 def coding_strand_to_AA(dna):
-    """ Computes the Protein encoded by a sequence of DNA.  This function
-        does not check for start and stop codons (it assumes that the input        DNA sequence represents an protein coding region).
+    # converts dna strand into codons and makes list of amino acids
+        aminoacids = ''
+        codon = ''
+        for letter in dna:
+            codon += letter
+            if len(codon) == 3:
+                aminoacids += aa_table[codon]
+                codon = ''
+        return aminoacids
 
-        dna: a DNA sequence represented as a string
-        returns: a string containing the sequence of amino acids encoded by the
-                 the input DNA fragment
 
-        >>> coding_strand_to_AA("ATGCGA")
-        'MR'
-        >>> coding_strand_to_AA("ATGCCCGCTTT")
-        'MPA'
-    """
-    # TODO: implement this
-    pass
+coding_strand_to_AA("ATGCCCGCTTT")
 
 
 def gene_finder(dna):
-    """ Returns the amino acid sequences that are likely coded by the specified dna
+    codon_seq = ''
+    threshold = longest_ORF_noncoding(dna, 300)
+    print(threshold)
+    allorfs = find_all_ORFs_both_strands(dna)
+    length = len(allorfs)
+    print(length)
+    for i in range(length):
+        print(len(allorfs[i]))
+        if len(allorfs[i]) > threshold:
+            codon_seq += allorfs[i]
+    amino_seq = coding_strand_to_AA(codon_seq)
+    return amino_seq
 
-        dna: a DNA sequence
-        returns: a list of all amino acid sequences coded by the sequence dna.
-    """
-    # TODO: implement this
-    pass
+
+""" Having some issues implimenting this last section. My threshold comes
+out to be some huge number 6000+ and so I'm guessing that it
+isn't parsing correctly. As a result, my amino acid sequence
+contains both very short and very long strings.
+"""
+
+dna = load_seq("./data/X73525.fa")
+gene_finder(dna)
 
 
 if __name__ == "__main__":
