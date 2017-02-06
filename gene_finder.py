@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+Updated February 6th, most recent version
 This has been a very interesting learning experience.
 Who knew that strings could be manipulated in so many ways!
 And all in the name of Science...
@@ -23,6 +24,7 @@ def shuffle_string(s):
 
 
 def get_complement(nucleotide):
+    """ Returns complement nucleotide, string"""
     n = nucleotide
     if n == 'T':
         return 'A'
@@ -32,8 +34,6 @@ def get_complement(nucleotide):
         return 'G'
     if n == 'G':
         return 'C'
-    # TODO: implement this
-    pass
 
 
 def get_reverse_complement(dna):
@@ -48,28 +48,29 @@ def get_reverse_complement(dna):
             neg = -1
             ind = ind + neg
         return blank
-        # TODO: implement this
-        pass
 
-
-# get_reverse_complement('ATATAT')
+# get_reverse_complement('ATGATAT')
 
 
 def rest_of_ORF(dna):
     # stop codos = 'TGA', 'TAG' or 'TAA'
-    neworf = []
-    count = 0
+    # neworf = []
+    # count = 0
     i = 3
     while i < len(dna):
         if dna[i:i+3] == 'TGA' or dna[i:i+3] == 'TAG' or dna[i:i+3] == 'TAA':
-            neworf.append(dna[:i])
-            i = i + 3
-            count += 1
+            # neworf.append(dna[:i])
+            return dna[:i]
         else:
             i = i + 3
-    if count == 0:
-        neworf.append(dna[:])
-    return(neworf)
+    return dna
+    # if count == 0:
+    #     neworf.append(dna[:])
+    # return(neworf)
+    #
+
+
+# rest_of_ORF('ATGCGAATGTAGCATCAAA')
 
 
 def find_all_ORFs_oneframe(dna):
@@ -81,7 +82,7 @@ def find_all_ORFs_oneframe(dna):
         if dna[n: n + 3] == 'ATG':
             stop1 = rest_of_ORF(dna[n:])
             oneframe.append(stop1)
-            n = n + len(stop1[-1])
+            n = n + len(stop1)
         else:
             n = n + 3
     return oneframe
@@ -89,7 +90,7 @@ def find_all_ORFs_oneframe(dna):
 # shift + enter runs highlighted
 
 
-find_all_ORFs_oneframe("ATGCCCTAG")
+# find_all_ORFs_oneframe("ATGCCCTAGCCCATGCAG")
 
 
 def find_all_ORFs(dna):
@@ -104,35 +105,44 @@ def find_all_ORFs(dna):
         return allORF
 
 
+# find_all_ORFs('ATGCGAATGTAGCATATGCAA')
+
+
 def find_all_ORFs_both_strands(dna):
+    """
+    >>> find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
+    ['ATGCGAATG', 'ATGCTACATTCGCAT']
+    """
     # returns list of all orfs
     blank_list = []
-    new_list = []
     reverse_dna = get_reverse_complement(dna)
     blank_list.extend(find_all_ORFs(dna))
     blank_list.extend(find_all_ORFs(reverse_dna))
-    for i in blank_list:
-        new_list += i
-    return new_list
+    return blank_list
 
 
-find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
+# find_all_ORFs_both_strands("ATGCGAATGTAGCATCAAA")
 
 # stop here for week 1!!
 
 
 def longest_ORF(dna):
+    """
+    >>> longest_ORF("ATGCGAATGTAGCATCAAA")
+    'ATGCTACATTCGCAT'
+    """
     # returns string of longest reading frame
     currentmax = ''
     new_list = find_all_ORFs_both_strands(dna)
+    # print("NEW LIST:")
+    # print(new_list)
     for i in range(len(new_list)):
         if len(new_list[i]) > len(new_list[0]):
             currentmax = new_list[i]
     return currentmax
 
 
-longest_ORF("ATGCGAATGTAGCATCAAA")
-
+# longest_ORF("ATGCGAATGTAGCATCAAA")
 
 def longest_ORF_noncoding(dna, num_trials):
     # returns int length of longest reading frame
@@ -144,13 +154,20 @@ def longest_ORF_noncoding(dna, num_trials):
         if len(longest) > val:
             val = len(longest)
             list_values.append(val)
+    # print(list_values)
     return val
 
 
-longest_ORF_noncoding("ATGCGAATGTAGCATCAAA", 30)
+# longest_ORF_noncoding("ATGCGAATGTAGCATCAAA", 300)
 
 
 def coding_strand_to_AA(dna):
+        """
+        >>> coding_strand_to_AA("ATGCGA")
+        'MR'
+        >>> coding_strand_to_AA("ATGCCCGCTTT")
+        'MPA'
+        """
     # converts dna strand into codons and makes list of amino acids
         aminoacids = ''
         codon = ''
@@ -162,29 +179,20 @@ def coding_strand_to_AA(dna):
         return aminoacids
 
 
-coding_strand_to_AA("ATGCCCGCTTT")
-
-
 def gene_finder(dna):
-    codon_seq = ''
-    threshold = longest_ORF_noncoding(dna, 300)
+    amino_seq = []
+    threshold = longest_ORF_noncoding(dna, 1500)
     print(threshold)
     allorfs = find_all_ORFs_both_strands(dna)
     length = len(allorfs)
-    print(length)
+    # print(length)
     for i in range(length):
-        print(len(allorfs[i]))
+        # print(len(allorfs[i]))
         if len(allorfs[i]) > threshold:
-            codon_seq += allorfs[i]
-    amino_seq = coding_strand_to_AA(codon_seq)
+            codon_seq = coding_strand_to_AA(allorfs[i])
+            amino_seq.append(codon_seq)
     return amino_seq
 
-
-""" Having some issues implimenting this last section. My threshold comes
-out to be some huge number 6000+ and so I'm guessing that it
-isn't parsing correctly. As a result, my amino acid sequence
-contains both very short and very long strings.
-"""
 
 dna = load_seq("./data/X73525.fa")
 gene_finder(dna)
